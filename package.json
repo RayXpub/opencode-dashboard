@@ -1,0 +1,31 @@
+{
+  "name": "opencode-dashboard",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --hot src/collector/index.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "build": "bun build --target=bun --production --outdir=dist src/collector/index.ts src/plugin/index.ts",
+    "start": "bun dist/collector/index.js"
+  },
+  "dependencies": {
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@opencode-ai/plugin": "^1.18.25",
+    "@tanstack/query-sync-storage-persister": "^5.102.8",
+    "@tanstack/react-query": "^5",
+    "@tanstack/react-query-persist-client": "^5.102.8",
+    "react": "^19",
+    "react-dom": "^19",
+    "zod": "^3"
+  },
+  "devDependencies": {
+    "@tanstack/react-query-devtools": "^5",
+    "@types/bun": "^1",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "bun-plugin-tailwind": "^0.1",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

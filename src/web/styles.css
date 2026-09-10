@@ -1,0 +1,86 @@
+@import "@fontsource/ibm-plex-mono/latin-400.css";
+@import "@fontsource/ibm-plex-mono/latin-500.css";
+@import "@fontsource/ibm-plex-mono/latin-600.css";
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --stats-bg: #ffffff;
+  --stats-layer: #fafafa;
+  --stats-layer-2: #eeeeee;
+  --stats-line: #0000001a;
+  --stats-line-strong: #00000033;
+  --stats-text: #161616;
+  --stats-muted: #5c5c5c;
+  --stats-faint: #707070;
+  --stats-accent-text: #3b5cf6;
+  --stats-dot: #d4d4d4;
+  --stats-hero-muted: #5c5c5c;
+  --stats-hero-pattern: #eeeeee;
+  --stats-logo-bg: #161616;
+  --stats-text-inverted: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --stats-bg: #161616;
+    --stats-layer: #242424;
+    --stats-layer-2: #303030;
+    --stats-line: #ffffff1a;
+    --stats-line-strong: #ffffff33;
+    --stats-text: #ffffff;
+    --stats-muted: #d4d4d4;
+    --stats-faint: #a3a3a3;
+    --stats-accent-text: #8190ff;
+    --stats-dot: #303030;
+    --stats-hero-muted: #a3a3a3;
+    --stats-hero-pattern: #303030;
+    --stats-logo-bg: #f1ecec;
+    --stats-text-inverted: #211e1e;
+  }
+}
+
+html {
+  background: var(--stats-bg);
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, "Liberation Mono", "Courier New", monospace;
+  font-synthesis: none;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+button,
+a {
+  outline-color: var(--stats-accent-text);
+  outline-offset: 2px;
+}
+
+.stats-pattern {
+  background-image: radial-gradient(
+    circle,
+    var(--stats-hero-pattern) 1px,
+    transparent 1px
+  );
+  background-position: center;
+  background-size: 6px 6px;
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    black 18%,
+    black 82%,
+    transparent 100%
+  );
+}
+
+* {
+  scrollbar-color: var(--stats-line-strong) var(--stats-bg);
+}
+
+::selection {
+  background: var(--stats-accent-text);
+  color: var(--stats-bg);
+}
