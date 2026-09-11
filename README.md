@@ -43,3 +43,17 @@ bun run typecheck
 bun test
 bun run build
 ```
+
+## Releases
+
+Add a changeset to each pull request with a user-facing change:
+
+```bash
+bun run changeset
+```
+
+After changesets reach `main`, the release workflow creates or updates a version pull request. Merging the version pull request updates `package.json` and `CHANGELOG.md`, then creates and pushes a Git tag such as `v0.1.0`.
+
+This package is private and the release workflow has no npm publish command or npm token. Releases exist only as versions, changelog entries, and Git tags.
+
+GitHub repository settings must allow GitHub Actions to create pull requests under **Settings > Actions > General > Workflow permissions**.
