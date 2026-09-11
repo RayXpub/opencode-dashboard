@@ -2,12 +2,26 @@
   "name": "opencode-dashboard",
   "version": "0.0.1",
   "type": "module",
+  "main": "./dist/server/index.js",
+  "exports": {
+    ".": "./dist/server/index.js",
+    "./server": "./dist/server/index.js",
+    "./tui": "./dist/tui/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "opencode": ">=1.18.30"
+  },
   "scripts": {
     "dev": "bun --hot src/collector/index.ts",
     "test": "bun test",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "build": "bun build --target=bun --production --outdir=dist src/collector/index.ts src/plugin/index.ts",
+    "clean": "bun -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "prebuild": "bun run clean",
+    "build": "bun scripts/build.ts",
     "start": "bun dist/collector/index.js"
   },
   "dependencies": {
