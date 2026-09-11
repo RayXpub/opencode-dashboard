@@ -1,6 +1,7 @@
 {
   "name": "opencode-dashboard",
   "version": "0.0.1",
+  "private": true,
   "type": "module",
   "main": "./dist/server/index.js",
   "exports": {
@@ -17,6 +18,9 @@
   "scripts": {
     "dev": "bun --hot src/collector/index.ts",
     "test": "bun test",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release:tag": "changeset git-tag",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "clean": "bun -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
@@ -35,6 +39,7 @@
     "zod": "^3"
   },
   "devDependencies": {
+    "@changesets/cli": "^3.0.2",
     "@eslint/js": "^10.0.1",
     "@tanstack/react-query-devtools": "^5",
     "@types/bun": "^1",
