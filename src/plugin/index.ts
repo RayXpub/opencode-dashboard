@@ -31,12 +31,13 @@ function serverAuthHeaders(): HeadersInit | undefined {
   return { Authorization: `Basic ${btoa(`${username}:${password}`)}` }
 }
 
-async function listGlobalSessions(serverUrl: URL): Promise<unknown[]> {
+export async function listGlobalSessions(serverUrl: URL): Promise<unknown[]> {
   const sessions: unknown[] = []
   let cursor: string | undefined
 
   do {
     const url = new URL("/experimental/session", serverUrl)
+    url.searchParams.set("archived", "true")
     url.searchParams.set("limit", "100")
     if (cursor) url.searchParams.set("cursor", cursor)
     const response = await fetch(url, { headers: serverAuthHeaders() })
@@ -50,17 +51,39 @@ async function listGlobalSessions(serverUrl: URL): Promise<unknown[]> {
   return sessions
 }
 
-export default (async ({ client, project, directory, serverUrl }) => {
-  const transport = (
-    client as unknown as {
-      _client: {
-        get(options: {
-          url: string
-          query: { limit: number; cursor?: number }
-        }): Promise<{ data?: unknown; error?: unknown; response: Response }>
-      }
+type GlobalSessionTransport = {
+  get(options: {
+    url: string
+    query: { archived: true; limit: number; cursor?: number }
+  }): Promise<{ data?: unknown; error?: unknown; response: Response }>
+}
+
+export async function listGlobalSessionsWithTransport(
+  transport: GlobalSessionTransport,
+): Promise<unknown[]> {
+  const sessions: unknown[] = []
+  let cursor: number | undefined
+
+  do {
+    const result = await transport.get({
+      url: "/experimental/session",
+      query: { archived: true, limit: 100, cursor },
+    })
+    if (result.error || !Array.isArray(result.data)) {
+      throw new Error("Global session request failed")
     }
-  )._client
+    sessions.push(...result.data)
+
+    const nextCursor = result.response.headers.get("x-next-cursor")
+    cursor = nextCursor ? Number(nextCursor) : undefined
+  } while (cursor !== undefined && Number.isFinite(cursor))
+
+  return sessions
+}
+
+export default (async ({ client, project, directory, serverUrl }) => {
+  const transport = (client as unknown as { _client: GlobalSessionTransport })
+    ._client
   const source: SourceIdentity = {
     processInstanceId,
     pluginInstanceId: crypto.randomUUID(),
@@ -133,14 +156,7 @@ export default (async ({ client, project, directory, serverUrl }) => {
       try {
         globalResult = await listGlobalSessions(serverUrl)
       } catch {
-        const result = await transport.get({
-          url: "/experimental/session",
-          query: { limit: 100 },
-        })
-        if (result.error || !Array.isArray(result.data)) {
-          throw new Error("Global session request failed")
-        }
-        globalResult = result.data
+        globalResult = await listGlobalSessionsWithTransport(transport)
       }
 
       for (const info of globalResult) {
