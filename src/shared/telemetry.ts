@@ -2,6 +2,7 @@ import { z } from "zod"
 import { PROTOCOL_VERSION } from "./protocol"
 
 const sourceIdentitySchema = z.object({
+  kind: z.enum(["server", "tui"]).optional(),
   processInstanceId: z.string(),
   pluginInstanceId: z.string(),
   projectId: z.string(),

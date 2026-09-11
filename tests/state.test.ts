@@ -109,6 +109,41 @@ test("historical metadata does not overwrite a known live status", () => {
   )
 })
 
+test("accepts TUI global snapshots without creating a process", () => {
+  const tuiSource: SourceIdentity = {
+    ...source,
+    kind: "tui",
+    processInstanceId: "tui-snapshot-process",
+    pluginInstanceId: "tui-snapshot-plugin",
+  }
+  handleSnapshot({
+    source: tuiSource,
+    scope: "global",
+    sessions: [
+      {
+        id: "inactive-global-session",
+        projectId: "inactive-project",
+        projectName: "inactive",
+        directory: "/projects/inactive",
+        title: "Inactive global session",
+        status: "idle",
+        statusKnown: false,
+        updatedAt: 3500,
+      },
+    ],
+  })
+
+  const state = getState()
+  expect(state.sessions).toContainEqual(
+    expect.objectContaining({ id: "inactive-global-session" }),
+  )
+  expect(
+    state.processes.some(
+      (process) => process.processInstanceId === "tui-snapshot-process",
+    ),
+  ).toBeFalse()
+})
+
 test("routes session actions through an active OpenCode server", () => {
   const actionSource: SourceIdentity = {
     ...source,
