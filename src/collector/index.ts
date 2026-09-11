@@ -4,5 +4,5 @@ import { createServer } from "./server";
 createServer({
   hostname: "127.0.0.1",
   port: 4747,
-  dashboard: dashboard as any,
+  dashboard,
 });

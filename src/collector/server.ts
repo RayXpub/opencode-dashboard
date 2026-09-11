@@ -66,7 +66,7 @@ async function mutateOpenCodeSession(
 type CollectorConfig = {
   hostname: string
   port: number
-  dashboard: any
+  dashboard: Bun.HTMLBundle
 }
 
 export function createServer(config: CollectorConfig) {
