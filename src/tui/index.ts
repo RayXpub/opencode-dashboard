@@ -1,4 +1,9 @@
 import type { TuiPluginApi, TuiPluginModule } from "@opencode-ai/plugin/tui";
+import {
+  createOpencodeClient,
+  type OpencodeClient,
+  type OpencodeClientConfig,
+} from "@opencode-ai/sdk/v2/client";
 import path from "node:path";
 import { createServer } from "../collector/server";
 import { sanitizeSession } from "../plugin/normalize";
@@ -42,12 +47,31 @@ async function ensureCollector() {
   }
 }
 
-async function sendGlobalSnapshot(api: TuiPluginApi, source: SourceIdentity) {
+export function createGlobalSessionClient(client: TuiPluginApi["client"]) {
+  const config = (
+    client as unknown as {
+      client: { getConfig(): OpencodeClientConfig };
+    }
+  ).client.getConfig();
+  const headers = new Headers(config.headers as HeadersInit | undefined);
+  headers.delete("x-opencode-directory");
+  headers.delete("x-opencode-workspace");
+
+  return createOpencodeClient({
+    ...config,
+    directory: undefined,
+    experimental_workspaceID: undefined,
+    headers,
+  });
+}
+
+export async function listGlobalSessions(client: OpencodeClient) {
   const sessions: SnapshotSession[] = [];
   let cursor: number | undefined;
 
   do {
-    const result = await api.client.experimental.session.list({
+    const result = await client.experimental.session.list({
+      archived: true,
       limit: 100,
       cursor,
     });
@@ -62,16 +86,25 @@ async function sendGlobalSnapshot(api: TuiPluginApi, source: SourceIdentity) {
     cursor = nextCursor ? Number(nextCursor) : undefined;
   } while (cursor !== undefined && Number.isFinite(cursor));
 
-  await sender.sendSnapshot({ source, scope: "global", sessions });
+  return sessions;
+}
+
+async function sendGlobalSnapshot(api: TuiPluginApi, source: SourceIdentity) {
+  await sender.sendSnapshot({
+    source,
+    scope: "global",
+    sessions: await listGlobalSessions(createGlobalSessionClient(api.client)),
+  });
 }
 
 function openDashboard() {
+  const url = `${dashboardUrl}/?v=${Date.now()}`;
   const command =
     process.platform === "darwin"
-      ? ["open", dashboardUrl]
+      ? ["open", url]
       : process.platform === "win32"
-        ? ["cmd", "/c", "start", "", dashboardUrl]
-        : ["xdg-open", dashboardUrl];
+        ? ["cmd", "/c", "start", "", url]
+        : ["xdg-open", url];
   const subprocess = Bun.spawn(command, {
     stdin: "ignore",
     stdout: "ignore",
