@@ -51,10 +51,10 @@ const STALE_THRESHOLD_MS = 30_000
 
 export const collectorInstanceId = crypto.randomUUID()
 
-let processes = new Map<string, StoredProcess>()
-let projects = new Map<string, StoredProject>()
-let sessions = new Map<string, StoredSession>()
-let subscribers = new Set<SseSubscriber>()
+const processes = new Map<string, StoredProcess>()
+const projects = new Map<string, StoredProject>()
+const sessions = new Map<string, StoredSession>()
+const subscribers = new Set<SseSubscriber>()
 let receivedGlobalSnapshot = false
 
 export function isReconciliationRequired() {
