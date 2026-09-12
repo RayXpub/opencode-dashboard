@@ -44,3 +44,13 @@ jobs:
         run: |
           bun run release:tag
           git push origin --tags
+
+      - name: Create GitHub release
+        if: steps.changesets.outputs.hasChangesets == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="v$(bun -p "require('./package.json').version")"
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            gh release create "$tag" --verify-tag --generate-notes --latest --title "$tag"
+          fi

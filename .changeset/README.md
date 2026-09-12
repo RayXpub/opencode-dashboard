@@ -12,4 +12,4 @@ Choose `patch`, `minor`, or `major` and commit the generated Markdown file with 
 bun run changeset --empty
 ```
 
-The release workflow creates a version pull request. Merging that pull request updates `package.json` and `CHANGELOG.md`, then creates and pushes a Git tag. This repository never publishes to npm.
+The release workflow creates a version pull request. Merging that pull request updates `package.json` and `CHANGELOG.md`, then creates a Git tag and GitHub release. This repository never publishes to npm.

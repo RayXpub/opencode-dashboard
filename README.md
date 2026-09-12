@@ -146,4 +146,4 @@ User-facing changes require a Changeset:
 bun run changeset
 ```
 
-The package is private. Releases consist of version updates, changelog entries, and Git tags; the release process never publishes to npm.
+The package is private. Releases consist of version updates, changelog entries, Git tags, and GitHub releases; the release process never publishes to npm.
