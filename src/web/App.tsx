@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react"
+import { useState, type SubmitEvent } from "react"
 import type { DashboardSession, DashboardState } from "../shared/protocol"
 import { useDashboard } from "./hooks/use-dashboard"
 import { useSessionActions } from "./hooks/use-session-actions"
@@ -289,7 +289,7 @@ function SessionActionDialog({
   onTitleChange: (title: string) => void
   onDelete: () => void
   onClose: () => void
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void
+  onSubmit: (event: SubmitEvent<HTMLFormElement>) => void
 }) {
   return (
     <div className="fixed inset-0 z-[100] grid place-items-center bg-black/50 p-4" role="presentation" onMouseDown={onClose}>
@@ -396,7 +396,7 @@ export function App() {
     setDialog({ session })
   }
 
-  async function submitSessionAction(event: FormEvent<HTMLFormElement>) {
+  async function submitSessionAction(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!dialog) return
 
@@ -454,7 +454,7 @@ export function App() {
               OPEN<span className="opacity-55">CODE</span>
             </div>
             <span className="hidden text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--stats-faint)] sm:inline">
-              Session data
+              Dashboard
             </span>
           </div>
           <div className="flex h-8 items-center gap-2 border border-[var(--stats-line-strong)] px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-[var(--stats-muted)]">
