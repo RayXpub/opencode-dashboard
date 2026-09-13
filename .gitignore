@@ -1,4 +1,8 @@
 node_modules/
 dist/
-*.db
-*.db-journal
+
+# Local environment and credential files
+.env
+.env.*
+!.env.example
+.npmrc
