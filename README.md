@@ -44,7 +44,7 @@ Nothing is sent to an external telemetry or storage service.
 
 ## Requirements
 
-- [OpenCode](https://opencode.ai/) `1.18.30` or newer
+- [OpenCode](https://opencode.ai/) `2.0.0` or newer
 - [Bun](https://bun.sh/) for installation from source
 - A browser available through your operating system's default URL opener
 
