@@ -38,7 +38,10 @@ function readModel(value: unknown): string | undefined {
   if (!model) return undefined
 
   const providerId = optionalString(model.providerID)
-  const modelId = optionalString(model.modelID) ?? optionalString(model.id)
+  const modelId =
+    optionalString(model.modelID) ??
+    optionalString(model.model) ??
+    optionalString(model.id)
   if (providerId && modelId) return `${providerId}/${modelId}`
   return modelId
 }
@@ -78,7 +81,9 @@ export function sanitizeSession(
 
   const time = asRecord(session.time)
   const project = asRecord(session.project)
-  const directory = optionalString(session.directory)
+  const location = asRecord(session.location)
+  const directory =
+    optionalString(session.directory) ?? optionalString(location?.directory)
   const projectId = optionalString(session.projectID)
   return {
     id,
@@ -147,14 +152,18 @@ export function normalizeEvent(
 ): TelemetryMessage | null {
   const event = asRecord(value)
   const type = optionalString(event?.type)
-  const properties = asRecord(event?.properties)
+  const properties =
+    asRecord(event?.properties) ?? asRecord(event?.data)
   if (!type || !properties) return null
 
   if (type === "session.created" || type === "session.updated") {
-    const info = asRecord(properties.info)
-    const id = optionalString(info?.id)
+    const info = asRecord(properties.info) ?? properties
+    const id = optionalString(info?.id) ?? optionalString(info?.sessionID)
     const previous = id ? sessions.get(id) : undefined
-    const session = sanitizeSession(info, previous?.status ?? "idle")
+    const session = sanitizeSession(
+      id && !info.id ? { ...info, id, location: event?.location } : info,
+      previous?.status ?? "idle",
+    )
     if (!session) return null
     sessions.set(session.id, session)
     return statusMessage(source, session)
@@ -162,7 +171,8 @@ export function normalizeEvent(
 
   if (type === "session.deleted") {
     const info = asRecord(properties.info)
-    const sessionId = optionalString(info?.id)
+    const sessionId =
+      optionalString(info?.id) ?? optionalString(properties.sessionID)
     if (!sessionId) return null
     sessions.delete(sessionId)
     return {
@@ -178,12 +188,17 @@ export function normalizeEvent(
     type === "message.updated" ||
     type === "session.next.agent.switched" ||
     type === "session.next.model.switched" ||
-    type === "session.next.step.started"
+    type === "session.next.step.started" ||
+    type === "session.agent.selected" ||
+    type === "session.model.selected" ||
+    type === "session.step.started"
   ) {
     const session = updateSessionAgent(
       properties,
       sessions,
-      type === "session.next.step.started" ? "running" : undefined,
+      type === "session.next.step.started" || type === "session.step.started"
+        ? "running"
+        : undefined,
     )
     return session ? statusMessage(source, session) : null
   }
@@ -204,15 +219,21 @@ export function normalizeEvent(
       status = mapSessionStatus(properties.status)
       break
     case "session.idle":
+    case "session.execution.succeeded":
+    case "session.execution.interrupted":
       status = "idle"
       break
     case "session.error":
+    case "session.execution.failed":
       status = "failed"
       break
     case "permission.asked":
     case "permission.updated":
     case "question.asked":
       status = "waiting"
+      break
+    case "session.execution.started":
+      status = "running"
       break
     default:
       return null

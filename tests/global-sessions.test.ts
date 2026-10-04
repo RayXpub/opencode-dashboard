@@ -1,13 +1,9 @@
 import { describe, expect, test } from "bun:test"
-import type { TuiPluginApi } from "@opencode-ai/plugin/tui"
 import {
   listGlobalSessions,
-  listGlobalSessionsWithTransport,
+  listGlobalSessionsWithClient,
 } from "../src/plugin"
-import {
-  createGlobalSessionClient,
-  listGlobalSessions as listTuiGlobalSessions,
-} from "../src/tui"
+import { listGlobalSessions as listTuiGlobalSessions } from "../src/tui"
 
 const pages = [
   [{ id: "active-session", title: "Active", time: { updated: 2 } }],
@@ -15,30 +11,26 @@ const pages = [
 ]
 
 describe("global session discovery", () => {
-  test("TUI requests archived sessions on every page", async () => {
+  test("TUI requests every session page", async () => {
     const queries: Array<Record<string, unknown>> = []
     const client = {
-      experimental: {
-        session: {
-          list: async (query: Record<string, unknown>) => {
-            queries.push(query)
-            const page = queries.length - 1
-            return {
-              data: pages[page],
-              response: new Response(null, {
-                headers: page === 0 ? { "x-next-cursor": "100" } : {},
-              }),
-            }
-          },
+      session: {
+        list: async (query?: Record<string, unknown>) => {
+          queries.push(query ?? {})
+          const page = queries.length - 1
+          return {
+            data: pages[page],
+            cursor: { next: page === 0 ? "cursor-2" : undefined },
+          }
         },
       },
-    } as unknown as TuiPluginApi["client"]
+    }
 
-    const sessions = await listTuiGlobalSessions(client)
+    const sessions = await listTuiGlobalSessions(client.session as never)
 
     expect(queries).toEqual([
-      { archived: true, limit: 100, cursor: undefined },
-      { archived: true, limit: 100, cursor: 100 },
+      { limit: 100, cursor: undefined },
+      { limit: 100, cursor: "cursor-2" },
     ])
     expect(sessions.map((session) => session.id)).toEqual([
       "active-session",
@@ -46,44 +38,7 @@ describe("global session discovery", () => {
     ])
   })
 
-  test("TUI global client does not inherit the current directory", async () => {
-    const requests: URL[] = []
-    const server = Bun.serve({
-      port: 0,
-      fetch(request) {
-        requests.push(new URL(request.url))
-        return Response.json(pages.flat())
-      },
-    })
-    const scopedClient = {
-      client: {
-        getConfig: () => ({
-          baseUrl: server.url.toString(),
-          directory: "/projects/current",
-          experimental_workspaceID: "current-workspace",
-          headers: { "x-opencode-directory": "/projects/current" },
-        }),
-      },
-    } as unknown as TuiPluginApi["client"]
-
-    try {
-      const sessions = await listTuiGlobalSessions(
-        createGlobalSessionClient(scopedClient),
-      )
-      expect(requests).toHaveLength(1)
-      expect(requests[0].searchParams.has("directory")).toBeFalse()
-      expect(requests[0].searchParams.has("workspace")).toBeFalse()
-      expect(requests[0].searchParams.get("archived")).toBe("true")
-      expect(sessions.map((session) => session.id)).toEqual([
-        "active-session",
-        "archived-session",
-      ])
-    } finally {
-      server.stop(true)
-    }
-  })
-
-  test("direct server requests archived sessions on every page", async () => {
+  test("direct server requests every session page", async () => {
     const queries: string[] = []
     const server = Bun.serve({
       port: 0,
@@ -91,8 +46,9 @@ describe("global session discovery", () => {
         const url = new URL(request.url)
         queries.push(url.search)
         const secondPage = url.searchParams.has("cursor")
-        return Response.json(pages[secondPage ? 1 : 0], {
-          headers: secondPage ? {} : { "x-next-cursor": "100" },
+        return Response.json({
+          data: pages[secondPage ? 1 : 0],
+          cursor: { next: secondPage ? undefined : "cursor-2" },
         })
       },
     })
@@ -100,8 +56,8 @@ describe("global session discovery", () => {
     try {
       const sessions = await listGlobalSessions(new URL(server.url))
       expect(queries).toEqual([
-        "?archived=true&limit=100",
-        "?archived=true&limit=100&cursor=100",
+        "?limit=100",
+        "?limit=100&cursor=cursor-2",
       ])
       expect(sessions).toEqual(pages.flat())
     } finally {
@@ -109,24 +65,22 @@ describe("global session discovery", () => {
     }
   })
 
-  test("authenticated fallback requests archived sessions on every page", async () => {
+  test("client requests every session page", async () => {
     const queries: Array<Record<string, unknown>> = []
-    const sessions = await listGlobalSessionsWithTransport({
-      async get({ query }) {
-        queries.push(query)
-        const secondPage = query.cursor !== undefined
+    const sessions = await listGlobalSessionsWithClient({
+      async list(query?: { limit?: number; cursor?: string }) {
+        queries.push(query ?? {})
+        const secondPage = query?.cursor !== undefined
         return {
           data: pages[secondPage ? 1 : 0],
-          response: new Response(null, {
-            headers: secondPage ? {} : { "x-next-cursor": "100" },
-          }),
+          cursor: { next: secondPage ? undefined : "cursor-2" },
         }
       },
-    })
+    } as never)
 
     expect(queries).toEqual([
-      { archived: true, limit: 100, cursor: undefined },
-      { archived: true, limit: 100, cursor: 100 },
+      { limit: 100, cursor: undefined },
+      { limit: 100, cursor: "cursor-2" },
     ])
     expect(sessions).toEqual(pages.flat())
   })

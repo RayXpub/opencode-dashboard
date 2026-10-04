@@ -172,4 +172,35 @@ describe("normalizeEvent", () => {
       session: { agent: "general" },
     })
   })
+
+  test("normalizes OpenCode v2 session events", () => {
+    const sessions = new Map<string, SnapshotSession>()
+    const message = normalizeEvent(
+      {
+        type: "session.created",
+        location: { directory: "/projects/dashboard" },
+        data: {
+          sessionID: "session-v2",
+          projectID: "global",
+          title: "V2 session",
+          agent: "build",
+          model: { providerID: "anthropic", id: "claude-test" },
+        },
+      },
+      source,
+      sessions,
+    )
+
+    expect(message).toMatchObject({
+      type: "session.status.changed",
+      session: {
+        id: "session-v2",
+        projectId: dashboardProjectId("global", "/projects/dashboard"),
+        directory: "/projects/dashboard",
+        title: "V2 session",
+        agent: "build",
+        model: "anthropic/claude-test",
+      },
+    })
+  })
 })

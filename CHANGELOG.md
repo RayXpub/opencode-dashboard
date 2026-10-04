@@ -1,5 +1,11 @@
 # opencode-dashboard
 
+## 0.1.1
+
+### Patch Changes
+
+- Add OpenCode v2 plugin compatibility.
+
 ## 0.1.0
 
 ### Minor Changes
