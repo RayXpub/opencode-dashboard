@@ -1,5 +1,11 @@
 # opencode-dashboard
 
+## 1.0.0
+
+### Major Changes
+
+- 24fc74a: opencode v2 support
+
 ## 0.1.1
 
 ### Patch Changes
